@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itheima.dao.CheckGroupDao">
+
+    <insert id="add" parameterType="checkGroup">
+-- 回显主键
+--  resultType:返回值类型
+-- order: after ,before , 执行完insert语句后才能查询主键
+-- keyColumn :主键列名
+-- keyProperty 主键属性名
+    <selectKey resultType="int" order="AFTER" keyColumn="id" keyProperty="id">
+        select last_insert_id()
+    </selectKey>
+        INSERT INTO `t_checkgroup`
+        (`code`, `name`, `helpCode`, `sex`, `remark`, `attention`)
+        VALUES
+        (#{code}, #{name}, #{helpCode}, #{sex}, #{remark}, #{attention})
+    </insert>
+
+    <!--
+         INSERT INTO `t_checkgroup_checkitem`
+        (`checkgroup_id`, `checkitem_id`)
+        VALUES ( #{param1}, #{param2}  )
+    -->
+    <insert id="set">
+        INSERT INTO `t_checkgroup_checkitem`
+        (`checkgroup_id`, `checkitem_id`)
+        VALUES ( #{checkGroupId}, #{checkItemId}  )
+    </insert>
+    <!--
+        ${}   '%${value}%'
+    -->
+    <select id="findByCondition" parameterType="string" resultType="CheckGroup">
+        select * from t_checkgroup
+        <where>
+            <if test="value != null and value.length > 0">
+                code like "%"#{value}"%" or name like "%"#{value}"%" or helpCode like "%"#{value}"%"
+            </if>
+        </where>
+    </select>
+
+
+
+    <select id="findById" parameterType="int" resultType="checkGroup">
+        select * from t_checkgroup where id = #{id}
+    </select>
+
+    <select id="findCheckItemIdsById" parameterType="int" resultType="int">
+        select checkitem_id from t_checkgroup_checkitem where checkgroup_id = #{id}
+    </select>
+
+    <update id="edit" parameterType="checkgroup">
+        UPDATE `t_checkgroup`
+        SET
+        `code`=#{code},
+         `name`=#{name},
+          `helpCode`=#{helpCode},
+          `sex`=#{sex},
+           `remark`=#{remark},
+           `attention`=#{attention}
+           WHERE (`id`= #{id})
+    </update>
+
+    <delete id="delAssociation" parameterType="int">
+        delete from t_checkgroup_checkitem where checkgroup_id = #{id}
+    </delete>
+
+    <select id="findCheckItemCountById" parameterType="int" resultType="long">
+        select count(0) from t_checkgroup_checkitem where checkgroup_id = #{id}
+    </select>
+
+    <select id="findSetmealCountById" parameterType="int" resultType="long">
+        select count(0) from t_setmeal_checkgroup where checkgroup_id = #{id}
+    </select>
+
+    <delete id="delById" parameterType="int">
+        delete from t_checkgroup where id = #{id}
+    </delete>
+
+    <select id="findAll" resultType="checkgroup">
+        select * from t_checkgroup
+    </select>
+
+    <resultMap id="findCheckGroupsBySetmealIdMap" type="checkgroup">
+        <id column="id" property="id"></id>
+        <result column="code" property="code"></result>
+        <result column="name" property="name"></result>
+        <result column="helpCode" property="helpCode"></result>
+        <result column="sex" property="sex"></result>
+        <result column="remark" property="remark"></result>
+        <result column="attention" property="attention"></result>
+        <collection
+                property="checkItems"
+                ofType="checkitem"
+                column="id"
+                select="com.itheima.dao.CheckItemDao.findCheckItemsByCheckGroupId"></collection>
+            <!--
+            有：检出组id
+            需要：检查项数据
+            List<CheckItem> com.itheima.dao.CheckItemDao.findCheckItemsByCheckGroupId(Integer checkGroupId)
+        -->
+    </resultMap>
+
+    <select id="findCheckGroupsBySetmealId" parameterType="int" resultMap="findCheckGroupsBySetmealIdMap">
+        select * from t_checkgroup where id in
+          (select checkgroup_id from t_setmeal_checkgroup where setmeal_id = #{setmealId})
+    </select>
+</mapper>

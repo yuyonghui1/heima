@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itheima.dao.SetmealDao">
+       <insert id="add" parameterType="setmeal">
+        <selectKey resultType="int" keyProperty="id" keyColumn="id" order="AFTER">
+            select last_insert_id()
+        </selectKey>
+         INSERT INTO `t_setmeal`
+         ( `name`, `code`, `helpCode`, `sex`, `age`, `price`, `remark`, `attention`, `img`)
+          VALUES
+          (#{name}, #{code}, #{helpCode}, #{sex}, #{age}, #{price}, #{remark}, #{attention}, #{img})
+       </insert>
+
+    <insert id="set">
+        INSERT INTO `t_setmeal_checkgroup`
+        (`setmeal_id`, `checkgroup_id`)
+        VALUES (#{param1}, #{param2})
+    </insert>
+
+    <select id="findByCondition" parameterType="string" resultType="setmeal">
+        select * from t_setmeal
+        <where>
+            <if test="value != null and value.length > 0">
+                code like "%"#{value}"%" or name like "%"#{value}"%" or helpCode like "%"#{value}"%"
+            </if>
+        </where>
+    </select>
+
+    <select id="findAll" resultType="setmeal">
+        select * from t_setmeal
+    </select>
+    <!--
+        结果映射： id 唯一的标识 type： 标签对应方法的返回值类型
+    -->
+    <resultMap id="findByIdMap" type="setmeal">
+        <!--id： 映射主键 ，column: 列名  property： 属性名-->
+        <id column="id" property="id"></id>
+        <!--result 映射非主键属性-->
+        <result column="name" property="name"></result>
+        <result column="code" property="code"></result>
+        <result column="helpCode" property="helpCode"></result>
+        <result column="sex" property="sex"></result>
+        <result column="age" property="age"></result>
+        <result column="price" property="price"></result>
+        <result column="remark" property="remark"></result>
+        <result column="attention" property="attention"></result>
+        <result column="img" property="img"></result>
+
+        <!--如果association（一对一）, collection（一对多） : 这两个标签，
+                那么该表所有的字段都需要映射，无论属性名月列名是否一致-->
+        <!--
+            property: 属性名
+            ofType：属性类型的泛型 ， 如果是一对一： javaType
+            column： 列名 （已知条件：参数）
+            select：sql语句， 方法的唯一标识（包名 + 类名 + 方法名）
+                已知条件：套餐id
+                需要的是什么：套餐对应的检出组
+                需要的方法：
+                        List<CheckGroup>    com.itheima.dao.CheckGroupDao.findCheckGroupsBySetmealId(Integer setmealId)
+
+        -->
+        <collection
+                    property="checkGroups"
+                    ofType="CheckGroup"
+                    column="id"
+                    select="com.itheima.dao.CheckGroupDao.findCheckGroupsBySetmealId"></collection>
+    </resultMap>
+
+
+    <select id="findDetailsById" parameterType="int" resultMap="findByIdMap">
+        select * from t_setmeal where id = #{id}
+    </select>
+
+    <select id="findById" parameterType="int" resultType="setmeal">
+        select * from t_setmeal where id = #{id}
+    </select>
+
+
+    <select id="findSetmealReport" resultType="map">
+        select count(o.id) value, s.name
+        from t_order o right join t_setmeal s
+        on o.setmeal_id = s.id
+        group by o.setmeal_id,s.id
+    </select>
+
+    <select id="getHotSetmeal" resultType="map">
+        select
+            count(0) setmeal_count,
+            s.name,
+            count(0) / (select count(0) from t_order)  proportion
+        from t_order  o, t_setmeal s
+        where o.setmeal_id = s.id
+        group by o.setmeal_id
+        order by count(0) desc
+        limit 2
+    </select>
+</mapper>
