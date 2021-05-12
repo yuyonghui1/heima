@@ -55,7 +55,7 @@
         <poi.version>3.14</poi.version>
         <aliyun-java-sdk-dysmsapi.version>1.0.0</aliyun-java-sdk-dysmsapi.version>
         <aliyun-java-sdk-core.version>3.3.1</aliyun-java-sdk-core.version>
-        <spring.security.version>5.0.2.RELEASE</spring.security.version>
+        <spring.security.version>5.2.10.RELEASE</spring.security.version>
     </properties>
     <!--依赖管理器：管理依赖的版本， 不会引入依赖-->
     <dependencyManagement>
